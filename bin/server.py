@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-import sys, os, BaseHTTPServer
+import sys, os, logging
+import BaseHTTPServer
 from BaseHTTPServer import BaseHTTPRequestHandler
-import logging
 from logging.handlers import RotatingFileHandler
 
 if sys.argv[1:]:
@@ -18,8 +18,9 @@ else:
     sys.stderr.write("Unrecognized appliance type: %s\n" % (appliance_type))
     sys.exit(1)
 
-FORK = False 
+FORK = True
 PORT = 8041
+PIDFILE = "/var/run/symphony-detector-endpoint.pid"
 LOGFILE = "/var/log/symphony-detector-endpoint.log"
 JSON = '{"version": "1", "type": "' + appliance_type + '"}'
 
@@ -70,6 +71,8 @@ if FORK:
         sys.stderr.write("Could not fork: %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
+    pid = str(os.getpid())
+    file(PIDFILE,'w+').write("%s\n" % pid)
     os.chdir('/')
     os.setsid()
     os.umask(0)
