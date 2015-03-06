@@ -40,6 +40,7 @@ esac
 
 mkdir -p "${PACKAGE_ROOT}/bin"
 curl -o "${PACKAGE_ROOT}/bin/server.py" "${PACKAGE_URL}/bin/server.py"
+chmod 0700 "${PACKAGE_ROOT}/bin/server.py"
 
 if [ "$APPLIANCE" == "router" ]; then
   create_systemd_unit 'public' 'dmz'
