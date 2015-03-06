@@ -1,0 +1,52 @@
+#!/bin/bash
+NAME=symphony-detector-endpoint
+PACKAGE_URL="https://raw.githubusercontent.com/alces-software/${NAME}/master"
+PACKAGE_ROOT="/opt/${NAME}"
+
+create_systemd_unit() {
+    local vpn_config vpn_id
+    vpn_config="$1"
+    vpn_id="$2"
+    cat <<EOF > "/etc/systemd/system/${NAME}.service"
+[Unit]
+Description=Symphony Detector Endpoint service
+Requires=openvpn@${vpn_config}.service
+After=openvpn@${vpn_config}.service
+
+[Service]
+ExecStart=$PACKAGE_ROOT/bin/server.py ${vpn_id}
+Type=forking
+PIDFile=/var/run/${NAME}.pid
+SysVStartPriority=99
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+case "$(hostname -s)" in
+    router*)
+        APPLIANCE="router"
+        ;;
+    symphony-director)
+        APPLIANCE="director"
+        ;;
+    *)
+        echo "Unable to determine appliance type from hostname."
+        exit 1
+        ;;
+esac
+
+mkdir -p "${PACKAGE_ROOT}/bin"
+curl -o "${PACKAGE_ROOT}/bin/server.py" "${PACKAGE_URL}/bin/server.py"
+
+if [ "$APPLIANCE" == "router" ]; then
+  create_systemd_unit 'public' 'dmz'
+else # if [ "$APPLIANCE" == "director" ]; then
+  create_systemd_unit 'manage' 'mgt'
+fi
+
+chmod 644 "/etc/systemd/system/${NAME}.service"
+systemctl daemon-reload
+systemctl enable "${NAME}.service"
