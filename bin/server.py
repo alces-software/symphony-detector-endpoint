@@ -13,7 +13,7 @@ else:
 if appliance_type == 'mgt':
     vpn_ip = '10.80.0.1'
 elif appliance_type == 'dmz':
-    vpn_ip = '10.80.1.1'
+    vpn_ip = '10.90.0.1'
 else:
     sys.stderr.write("Unrecognized appliance type: %s\n" % (appliance_type))
     sys.exit(1)
